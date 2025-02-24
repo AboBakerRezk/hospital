@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-import 'ai_service.dart';
-import 'db_helper.dart'; // يحتوي على DBHelper ونموذج Patient
+import '../ai/ai_service.dart';
+import '../data/db_helper.dart'; // يحتوي على DBHelper ونموذج Patient
 
 class PatientsListScreen extends StatefulWidget {
   @override

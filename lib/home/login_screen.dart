@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -28,8 +31,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_animationController);
     _animationController.forward();
+    _checkLoginStatus();
   }
 
+  /// التحقق مما إذا كان المستخدم قد سجل دخوله مسبقاً وبخيار "Remember Me"
+  Future<void> _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool remember = prefs.getBool('remember_me') ?? false;
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && remember) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+
+  /// عملية تسجيل الدخول
   Future<void> login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
@@ -37,10 +52,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       errorMessage = null;
     });
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      // حفظ خيار "Remember Me"
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', _rememberMe);
       Navigator.pushReplacementNamed(context, '/home');
     } on FirebaseAuthException catch (e) {
       String message = "An error occurred during login.";
@@ -74,9 +92,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return TextFormField(
       controller: emailController,
       keyboardType: TextInputType.emailAddress,
+      style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         labelText: 'Email Address',
-        prefixIcon: Icon(Icons.email),
+        labelStyle: const TextStyle(color: Colors.black),
+        prefixIcon: const Icon(Icons.email, color: Colors.black),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (value) {
@@ -95,12 +115,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return TextFormField(
       controller: passwordController,
       obscureText: _obscurePassword,
+      style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: Icon(Icons.lock),
+        labelStyle: const TextStyle(color: Colors.black),
+        prefixIcon: const Icon(Icons.lock, color: Colors.black),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.black),
           onPressed: () {
             setState(() {
               _obscurePassword = !_obscurePassword;
@@ -132,16 +154,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             });
           },
         ),
-        Text('Remember Me', style: TextStyle(fontSize: 14)),
-        Spacer(),
+        const Text('Remember Me', style: TextStyle(fontSize: 14, color: Colors.black)),
+        const Spacer(),
         TextButton(
           onPressed: () {
-            // Add forgot password logic if needed
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('"Forgot Password" feature is under development.')),
+              const SnackBar(content: Text('"Forgot Password" feature is under development.')),
             );
           },
-          child: Text('Forgot Password?'),
+          child: const Text('Forgot Password?', style: TextStyle(color: Colors.teal)),
         ),
       ],
     );
@@ -149,9 +170,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
-      // Attractive gradient background
+      // لا تغيير في لون الخلفية؛ نستخدم نفس التدرج الأصلي
       body: Container(
+        width: size.width,
+        height: size.height,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.teal[700]!, Colors.teal[300]!],
@@ -177,37 +201,37 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       children: [
                         Text(
                           'Login',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal[700]),
                         ),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         _buildEmailField(),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildPasswordField(),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         _buildRememberMe(),
                         if (errorMessage != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(errorMessage!, style: TextStyle(color: Colors.red)),
+                            child: Text(errorMessage!, style: const TextStyle(color: Colors.red)),
                           ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         isLoading
-                            ? CircularProgressIndicator()
+                            ? const CircularProgressIndicator()
                             : ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.teal[700],
-                            minimumSize: Size(double.infinity, 50),
+                            minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           onPressed: login,
-                          child: Text('Login', style: TextStyle(fontSize: 18)),
+                          child: const Text('Login', style: TextStyle(fontSize: 18)),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/signup');
                           },
-                          child: Text("Don't have an account? Sign Up", style: TextStyle(fontSize: 16)),
+                          child: const Text("Don't have an account? Sign Up", style: TextStyle(fontSize: 16, color: Colors.teal)),
                         ),
                       ],
                     ),

@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     userPhotoUrl = user?.photoURL;
   }
 
-  /// Greeting section that shows the user's photo, name, and a welcome message.
+  /// Greeting section that shows the user's photo and name.
   Widget _buildGreetingSection() {
     return ListTile(
       leading: CircleAvatar(
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Recommendations carousel using data from Firestore collection "recommendations".
+  /// Carousel of recommendations pulled from Firestore.
   Widget _buildRecommendationsCarousel() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
@@ -100,11 +100,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Upcoming appointments section with sample data.
+  /// Upcoming appointments with sample data.
   Widget _buildUpcomingAppointments() {
     final appointments = [
-      {'time': '10:00 AM', 'doctor': 'Dr. Ahmed', 'department': 'Cardiology'},
-      {'time': '2:00 PM', 'doctor': 'Dr. Sara', 'department': 'Endocrinology'},
+      {
+        'time': '10:00 AM',
+        'doctor': 'Dr. Ahmed',
+        'department': 'Cardiology'
+      },
+      {
+        'time': '2:00 PM',
+        'doctor': 'Dr. Sara',
+        'department': 'Endocrinology'
+      },
     ];
     return Card(
       elevation: 4,
@@ -121,10 +129,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ...appointments.map((appt) {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading:
-                Icon(Icons.calendar_today, color: Colors.teal[700]),
-                title:
-                Text('${appt['time']} with ${appt['doctor']}'),
+                leading: Icon(Icons.calendar_today, color: Colors.teal[700]),
+                title: Text('${appt['time']} with ${appt['doctor']}'),
                 subtitle: Text('${appt['department']}'),
               );
             }).toList(),
@@ -134,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Shortcuts grid for quick access to different app sections.
+  /// Shortcuts grid for common pages.
   Widget _buildShortcutsGrid() {
     return GridView.count(
       shrinkWrap: true,
@@ -148,14 +154,45 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.pushNamed(context, '/chat');
         }),
         _buildShortcutCard(Icons.people, 'Patients', () {
-          Navigator.pushNamed(context, '/patients');
+          Navigator.pushReplacementNamed(context, '/patients');
         }),
         _buildShortcutCard(Icons.settings, 'Settings', () {
-          Navigator.pushNamed(context, '/settings');
+          Navigator.pushReplacementNamed(context, '/settings');
         }),
-        _buildShortcutCard(Icons.history, 'Recommendation Log', () {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Feature under development')));
+        _buildShortcutCard(Icons.medical_services, 'Clinical Assistant', () {
+          Navigator.pushNamed(context, '/clinicalAssistant');
+        }),
+      ],
+    );
+  }
+
+  /// New grid for Clinical Tools.
+  Widget _buildClinicalToolsGrid() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      padding: EdgeInsets.all(8),
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      children: [
+        _buildShortcutCard(Icons.analytics, 'Doctor Analytics', () {
+          Navigator.pushNamed(context, '/doctorAnalytics');
+        }),
+        _buildShortcutCard(Icons.note, 'Notes Summarizer', () {
+          Navigator.pushNamed(context, '/clinicalNotesSummarizer');
+        }),
+        _buildShortcutCard(Icons.assessment, 'Risk Assessment', () {
+          Navigator.pushNamed(context, '/clinicalRiskAssessment');
+        }),
+        _buildShortcutCard(Icons.list_alt, 'Differential Dx', () {
+          Navigator.pushNamed(context, '/differentialDiagnosis');
+        }),
+        _buildShortcutCard(Icons.medication, 'Med Interaction', () {
+          Navigator.pushNamed(context, '/medicationInteraction');
+        }),
+        _buildShortcutCard(Icons.recommend, 'Treatment Rec.', () {
+          Navigator.pushNamed(context, '/treatmentRecommendation');
         }),
       ],
     );
@@ -165,8 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         color: Colors.teal[50],
         elevation: 3,
         child: Center(
@@ -175,9 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(icon, size: 40, color: Colors.teal[700]),
               SizedBox(height: 10),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500)),
+              Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -195,29 +229,23 @@ class _HomeScreenState extends State<HomeScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return Container(
-              height: 80,
-              child: Center(child: CircularProgressIndicator()));
+          return Container(height: 80, child: Center(child: CircularProgressIndicator()));
         }
         final docs = snapshot.data!.docs;
         if (docs.isEmpty) {
-          return Container(
-              height: 80,
-              child: Center(child: Text('No new notifications')));
+          return Container(height: 80, child: Center(child: Text('No new notifications')));
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Notifications',
-                style:
-                TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             ...docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               final content = data['content'] ?? '';
               return ListTile(
-                leading: Icon(Icons.notification_important,
-                    color: Colors.teal[700]),
+                leading: Icon(Icons.notification_important, color: Colors.teal[700]),
                 title: Text(content, style: TextStyle(fontSize: 14)),
                 dense: true,
               );
@@ -254,9 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Text(
-                  userName != null && userName!.isNotEmpty
-                      ? userName![0]
-                      : "U",
+                  userName != null && userName!.isNotEmpty ? userName![0] : "U",
                   style: TextStyle(fontSize: 40.0, color: Colors.teal[700]),
                 ),
               ),
@@ -315,7 +341,13 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 16),
             _buildUpcomingAppointments(),
             SizedBox(height: 16),
+            Text('Quick Shortcuts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
             _buildShortcutsGrid(),
+            SizedBox(height: 16),
+            Text('Clinical Tools', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            _buildClinicalToolsGrid(),
             SizedBox(height: 16),
             _buildNotifications(),
             SizedBox(height: 16),
@@ -327,10 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: Colors.teal[700],
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.people), label: 'Patients'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Patients'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
         onTap: (index) {
           if (index == 0) {

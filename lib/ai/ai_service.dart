@@ -1,7 +1,7 @@
 // services/ai_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../constants.dart';
+import 'constants.dart';
 
 class AIService {
   static const String _apiUrl = "https://api.openai.com/v1/chat/completions";
